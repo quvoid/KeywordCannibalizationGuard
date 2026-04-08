@@ -5,333 +5,201 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Content Duplicacy Checker</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-
 <style>
 :root {
-  --bg:       #0c0c0e;
-  --s1:       #141418;
-  --s2:       #1c1c22;
-  --s3:       #242430;
-  --border:   #2a2a38;
-  --border2:  #38384a;
-  --text:     #eeeaf2;
-  --muted:    #7a7a96;
-  --faint:    #3a3a52;
-  --accent:   #c8ff57;
-  --accent2:  #9fcc3a;
-  --red:      #ff5566;
-  --red-s:    #1e0f12;
-  --red-b:    #3a1820;
-  --green:    #57ffb8;
-  --green-s:  #0a1e16;
-  --green-b:  #143020;
-  --blue:     #57b8ff;
-  --amber:    #ffcc57;
-  --purple:   #b857ff;
-  --teal:     #57ffee;
-  --font-h:   'Syne', sans-serif;
-  --font-b:   'DM Sans', sans-serif;
-  --font-m:   'DM Mono', monospace;
+  --bg:      #0c0c0e; --s1: #141418; --s2: #1c1c22; --s3: #242430;
+  --border:  #2a2a38; --border2: #38384a; --text: #eeeaf2; --muted: #7a7a96; --faint: #3a3a52;
+  --accent:  #c8ff57; --accent2: #9fcc3a;
+  --red:     #ff5566; --red-s: #1e0f12; --red-b: #3a1820;
+  --orange:  #ff9957; --orange-s: #1e1208; --orange-b: #3a2010;
+  --green:   #57ffb8; --green-s: #0a1e16; --green-b: #143020;
+  --blue:    #57b8ff; --amber: #ffcc57; --purple: #b857ff; --teal: #57ffee;
+  --font-h:  'Syne', sans-serif; --font-b: 'DM Sans', sans-serif; --font-m: 'DM Mono', monospace;
 }
-
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-b); font-size: 14px; line-height: 1.6; min-height: 100vh; overflow-x: hidden; }
+body::before { content:''; position:fixed; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events:none; z-index:0; opacity:0.5; }
 
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-b);
-  font-size: 14px;
-  line-height: 1.6;
-  min-height: 100vh;
-  overflow-x: hidden;
-}
+/* HEADER */
+header { position:sticky; top:0; z-index:200; background:rgba(12,12,14,0.92); backdrop-filter:blur(16px); border-bottom:1px solid var(--border); padding:0 2rem; height:56px; display:flex; align-items:center; justify-content:space-between; }
+.logo { font-family:var(--font-h); font-weight:800; font-size:15px; letter-spacing:-0.3px; display:flex; align-items:center; gap:10px; }
+.logo-mark { width:28px; height:28px; background:var(--accent); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:14px; color:#0c0c0e; font-weight:800; }
+.header-right { display:flex; align-items:center; gap:16px; }
+.auth-status { font-family:var(--font-m); font-size:11px; color:var(--muted); display:flex; align-items:center; gap:6px; }
+.auth-dot { width:6px; height:6px; border-radius:50%; background:var(--faint); transition:background 0.3s; }
+.auth-dot.on  { background:var(--accent); box-shadow:0 0 6px var(--accent); }
+.auth-dot.err { background:var(--red); }
+#sign-in-btn, #sign-out-btn { font-family:var(--font-h); font-weight:700; font-size:12px; padding:7px 18px; border-radius:6px; border:none; cursor:pointer; transition:all 0.15s; letter-spacing:0.3px; }
+#sign-in-btn         { background:var(--accent); color:#0c0c0e; }
+#sign-in-btn:hover   { background:var(--accent2); }
+#sign-out-btn        { background:transparent; color:var(--muted); border:1px solid var(--border2); display:none; }
+#sign-out-btn:hover  { color:var(--text); background:var(--s2); }
 
-body::before {
-  content: '';
-  position: fixed; inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-  pointer-events: none; z-index: 0; opacity: 0.5;
-}
+/* MAIN */
+main { max-width:1280px; margin:0 auto; padding:2.5rem 2rem 4rem; position:relative; z-index:1; }
 
-/* ── HEADER ── */
-header {
-  position: sticky; top: 0; z-index: 200;
-  background: rgba(12,12,14,0.92);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--border);
-  padding: 0 2rem; height: 56px;
-  display: flex; align-items: center; justify-content: space-between;
-}
+/* HERO */
+.hero { margin-bottom:3rem; }
+.hero-eyebrow { font-family:var(--font-m); font-size:11px; color:var(--accent); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:12px; }
+.hero h1 { font-family:var(--font-h); font-weight:800; font-size:clamp(36px,5vw,64px); letter-spacing:-2px; line-height:1.0; margin-bottom:1rem; }
+.hero h1 em { color:var(--accent); font-style:normal; }
+.hero p { color:var(--muted); font-size:15px; max-width:520px; line-height:1.7; }
 
-.logo {
-  font-family: var(--font-h);
-  font-weight: 800; font-size: 15px; letter-spacing: -0.3px;
-  display: flex; align-items: center; gap: 10px;
-}
+/* AUTH GATE */
+#auth-gate { background:var(--s1); border:1px solid var(--border); border-radius:14px; padding:3rem 2rem; text-align:center; margin-bottom:2rem; }
+#auth-gate h2 { font-family:var(--font-h); font-size:20px; font-weight:700; margin-bottom:10px; }
+#auth-gate p  { color:var(--muted); font-size:13px; margin-bottom:1.5rem; line-height:1.7; }
+.big-sign-in { display:inline-flex; align-items:center; gap:10px; background:var(--accent); color:#0c0c0e; font-family:var(--font-h); font-weight:700; font-size:14px; padding:12px 28px; border-radius:8px; border:none; cursor:pointer; transition:all 0.15s; }
+.big-sign-in:hover { background:var(--accent2); transform:translateY(-1px); }
+.google-icon { width:18px; height:18px; }
 
-.logo-mark {
-  width: 28px; height: 28px; background: var(--accent);
-  border-radius: 6px; display: flex; align-items: center;
-  justify-content: center; font-size: 14px; color: #0c0c0e; font-weight: 800;
-}
+/* APP */
+#app-content { display:none; }
 
-.header-right { display: flex; align-items: center; gap: 16px; }
+/* SECTION HEADER */
+.section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:10px; }
+.section-title { font-family:var(--font-h); font-size:13px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.8px; }
+.add-sheet-btn { display:flex; align-items:center; gap:7px; background:var(--s2); border:1px dashed var(--border2); border-radius:8px; padding:8px 16px; font-family:var(--font-m); font-size:11px; color:var(--muted); cursor:pointer; transition:all 0.2s; }
+.add-sheet-btn:hover { border-color:var(--accent); color:var(--accent); background:rgba(200,255,87,0.05); }
+.add-sheet-btn svg { width:14px; height:14px; }
 
-.auth-status {
-  font-family: var(--font-m); font-size: 11px; color: var(--muted);
-  display: flex; align-items: center; gap: 6px;
-}
+/* SHEET CARDS */
+.sheets-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px,1fr)); gap:14px; margin-bottom:1rem; }
+.sheet-card { background:var(--s1); border:1px solid var(--border); border-radius:12px; padding:1.25rem; transition:border-color 0.2s; position:relative; overflow:hidden; animation:cardIn 0.25s ease both; }
+@keyframes cardIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.sheet-card::after { content:''; position:absolute; top:0; left:0; right:0; height:2px; border-radius:12px 12px 0 0; }
+.sheet-card[data-color="0"]::after { background:var(--blue); }
+.sheet-card[data-color="1"]::after { background:var(--amber); }
+.sheet-card[data-color="2"]::after { background:var(--purple); }
+.sheet-card[data-color="3"]::after { background:var(--teal); }
+.sheet-card[data-color="4"]::after { background:var(--green); }
+.sheet-card[data-color="5"]::after { background:var(--red); }
+.sheet-card[data-color="6"]::after { background:#ff9957; }
+.sheet-card[data-color="7"]::after { background:#ff57c8; }
+.sheet-card[data-color="8"]::after { background:#57d4ff; }
+.sheet-card[data-color="9"]::after { background:var(--accent); }
+.sheet-card.loaded { border-color:var(--border2); }
 
-.auth-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--faint); transition: background 0.3s;
-}
-.auth-dot.on  { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
-.auth-dot.err { background: var(--red); }
+.card-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:12px; gap:8px; }
+.card-name-input { flex:1; background:transparent; border:none; border-bottom:1px solid var(--border); color:var(--text); font-family:var(--font-h); font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; padding:2px 0 4px; outline:none; transition:border-color 0.2s; min-width:0; }
+.card-name-input:focus        { border-color:var(--border2); }
+.card-name-input::placeholder { color:var(--faint); }
+.remove-btn { width:22px; height:22px; border-radius:5px; background:transparent; border:1px solid var(--border); color:var(--muted); font-size:14px; line-height:1; cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:all 0.15s; }
+.remove-btn:hover { background:var(--red-s); border-color:var(--red-b); color:var(--red); }
 
-#sign-in-btn, #sign-out-btn {
-  font-family: var(--font-h); font-weight: 700; font-size: 12px;
-  padding: 7px 18px; border-radius: 6px; border: none;
-  cursor: pointer; transition: all 0.15s; letter-spacing: 0.3px;
-}
-#sign-in-btn         { background: var(--accent); color: #0c0c0e; }
-#sign-in-btn:hover   { background: var(--accent2); }
-#sign-in-btn:disabled{ opacity: 0.5; cursor: not-allowed; }
-#sign-out-btn        { background: transparent; color: var(--muted); border: 1px solid var(--border2); display: none; }
-#sign-out-btn:hover  { color: var(--text); background: var(--s2); }
+.input-row { display:flex; gap:8px; }
+.sheet-input { flex:1; min-width:0; background:var(--s2); border:1px solid var(--border); border-radius:7px; padding:8px 11px; color:var(--text); font-family:var(--font-m); font-size:11px; outline:none; transition:border-color 0.2s; }
+.sheet-input::placeholder { color:var(--faint); }
+.sheet-input:focus        { border-color:var(--border2); }
+.load-btn { background:var(--s3); border:1px solid var(--border2); border-radius:7px; color:var(--text); font-family:var(--font-m); font-size:11px; padding:8px 14px; cursor:pointer; white-space:nowrap; transition:background 0.15s; flex-shrink:0; }
+.load-btn:hover    { background:var(--border); }
+.load-btn:disabled { opacity:0.35; cursor:not-allowed; }
 
-/* ── MAIN ── */
-main { max-width: 1280px; margin: 0 auto; padding: 2.5rem 2rem 4rem; position: relative; z-index: 1; }
+/* Keyword column toggles */
+.kw-filter-row { display:flex; flex-wrap:wrap; gap:4px; margin-top:8px; align-items:center; }
+.kw-tag-label  { font-family:var(--font-m); font-size:9px; color:var(--muted); padding:2px 0; }
+.kw-tag { font-family:var(--font-m); font-size:9px; padding:2px 8px; border-radius:4px; background:rgba(200,255,87,0.08); color:var(--accent); border:1px solid rgba(200,255,87,0.2); cursor:pointer; transition:all 0.15s; user-select:none; }
+.kw-tag.off { background:var(--s3); color:var(--faint); border-color:var(--border); }
 
-/* ── HERO ── */
-.hero { margin-bottom: 3rem; }
+.card-meta { margin-top:10px; font-family:var(--font-m); font-size:10px; color:var(--muted); min-height:15px; }
+.card-meta.ok  { color:var(--green); }
+.card-meta.err { color:var(--red); }
+.tab-pills { display:flex; flex-wrap:wrap; gap:4px; margin-top:8px; }
+.tab-pill  { font-family:var(--font-m); font-size:9px; padding:2px 7px; border-radius:4px; background:var(--s3); color:var(--muted); border:1px solid var(--border); }
 
-.hero-eyebrow {
-  font-family: var(--font-m); font-size: 11px; color: var(--accent);
-  letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px;
-}
+/* SCAN BAR */
+.scan-bar { background:var(--s1); border:1px solid var(--border); border-radius:12px; padding:1.25rem 1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:2rem; flex-wrap:wrap; }
+.scan-info { font-size:13px; color:var(--muted); }
+.scan-info strong { color:var(--text); font-weight:500; }
+.scan-btn { background:var(--accent); color:#0c0c0e; border:none; border-radius:8px; padding:11px 28px; font-family:var(--font-h); font-size:13px; font-weight:700; cursor:pointer; transition:all 0.15s; flex-shrink:0; letter-spacing:0.3px; }
+.scan-btn:hover    { background:var(--accent2); transform:translateY(-1px); }
+.scan-btn:disabled { opacity:0.35; cursor:not-allowed; transform:none; }
 
-.hero h1 {
-  font-family: var(--font-h); font-weight: 800;
-  font-size: clamp(36px, 5vw, 64px);
-  letter-spacing: -2px; line-height: 1.0;
-  color: var(--text); margin-bottom: 1rem;
-}
-.hero h1 em { color: var(--accent); font-style: normal; }
+/* STATS */
+.stats-row { grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:1.5rem; display:none; }
+.stat-card  { background:var(--s1); border:1px solid var(--border); border-radius:10px; padding:1rem 1.1rem; }
+.stat-label { font-family:var(--font-m); font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.7px; margin-bottom:6px; }
+.stat-num   { font-family:var(--font-h); font-size:28px; font-weight:800; letter-spacing:-1.5px; }
+.stat-num.acc    { color:var(--accent); }
+.stat-num.red    { color:var(--red); }
+.stat-num.orange { color:var(--orange); }
+.stat-num.green  { color:var(--green); }
 
-.hero p { color: var(--muted); font-size: 15px; max-width: 520px; line-height: 1.7; }
+/* DUP LEGEND */
+.dup-legend { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:1rem; }
+.legend-pill { display:inline-flex; align-items:center; gap:6px; font-family:var(--font-m); font-size:10px; padding:4px 10px; border-radius:6px; }
+.legend-pill.cross  { background:var(--red-s);    color:var(--red);    border:1px solid var(--red-b); }
+.legend-pill.intra  { background:var(--orange-s); color:var(--orange); border:1px solid var(--orange-b); }
+.legend-pill.unique { background:var(--green-s);  color:var(--green);  border:1px solid var(--green-b); }
 
-/* ── AUTH GATE ── */
-#auth-gate {
-  background: var(--s1); border: 1px solid var(--border);
-  border-radius: 14px; padding: 3rem 2rem;
-  text-align: center; margin-bottom: 2rem;
-}
-#auth-gate h2 { font-family: var(--font-h); font-size: 20px; font-weight: 700; margin-bottom: 10px; }
-#auth-gate p  { color: var(--muted); font-size: 13px; margin-bottom: 1.5rem; line-height: 1.7; }
+/* DUP ALERT */
+.dup-alert { background:var(--red-s); border:1px solid var(--red-b); border-radius:10px; padding:12px 16px; font-size:12px; color:var(--red); margin-bottom:1.25rem; display:none; line-height:1.7; }
 
-.big-sign-in {
-  display: inline-flex; align-items: center; gap: 10px;
-  background: var(--accent); color: #0c0c0e;
-  font-family: var(--font-h); font-weight: 700; font-size: 14px;
-  padding: 12px 28px; border-radius: 8px; border: none; cursor: pointer; transition: all 0.15s;
-}
-.big-sign-in:hover    { background: var(--accent2); transform: translateY(-1px); }
-.big-sign-in:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-.google-icon { width: 18px; height: 18px; }
+/* RESULTS */
+#results-area { display:none; }
+.results-toolbar { display:flex; gap:10px; margin-bottom:1rem; flex-wrap:wrap; align-items:center; }
+.search-input { flex:1; min-width:200px; background:var(--s1); border:1px solid var(--border); border-radius:8px; padding:8px 13px; color:var(--text); font-family:var(--font-b); font-size:13px; outline:none; transition:border-color 0.2s; }
+.search-input:focus       { border-color:var(--border2); }
+.search-input::placeholder { color:var(--faint); }
+.ftab { padding:7px 14px; font-size:11px; font-family:var(--font-m); border-radius:7px; border:1px solid var(--border); background:var(--s1); color:var(--muted); cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+.ftab:hover          { border-color:var(--border2); color:var(--text); }
+.ftab.active         { background:var(--s2); border-color:var(--border2); color:var(--text); }
+.ftab.cross-tab.active { background:var(--red-s);    border-color:var(--red-b);    color:var(--red); }
+.ftab.intra-tab.active { background:var(--orange-s); border-color:var(--orange-b); color:var(--orange); }
+.filter-tabs-dynamic { display:flex; gap:6px; flex-wrap:wrap; }
+.export-btn { background:transparent; border:1px solid var(--border2); border-radius:7px; color:var(--muted); font-family:var(--font-m); font-size:11px; padding:7px 14px; cursor:pointer; transition:all 0.15s; }
+.export-btn:hover { color:var(--text); background:var(--s2); }
 
-/* ── APP ── */
-#app-content { display: none; }
+/* TABLE */
+.table-wrap { background:var(--s1); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+.tbl-scroll { max-height:600px; overflow-y:auto; }
+.tbl-scroll::-webkit-scrollbar       { width:4px; }
+.tbl-scroll::-webkit-scrollbar-thumb { background:var(--border2); border-radius:4px; }
+table { width:100%; border-collapse:collapse; font-size:13px; table-layout:fixed; }
+thead th { background:var(--s2); padding:10px 14px; text-align:left; font-family:var(--font-m); font-size:9px; font-weight:500; color:var(--muted); text-transform:uppercase; letter-spacing:0.7px; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:5; }
+tbody td { padding:10px 14px; border-bottom:1px solid var(--border); vertical-align:top; color:var(--text); word-break:break-word; }
+tbody tr:last-child td           { border-bottom:none; }
+tbody tr.row-cross td            { background:#170d0f; }
+tbody tr.row-intra td            { background:#130f08; }
+tbody tr.row-both td             { background:#190c0f; }
+tbody tr:not(.row-cross):not(.row-intra):not(.row-both):hover td { background:var(--s2); }
 
-/* ── SHEET GRID ── */
-.sheets-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
-  gap: 14px; margin-bottom: 2rem;
-}
+/* Keyword cell */
+.kw-main { font-family:var(--font-m); font-size:12px; font-weight:500; }
+.kw-main.cross { color:var(--red); }
+.kw-main.intra { color:var(--orange); }
+.kw-main.both  { color:#ff7755; }
 
-.sheet-card {
-  background: var(--s1); border: 1px solid var(--border);
-  border-radius: 12px; padding: 1.25rem;
-  transition: border-color 0.2s; position: relative; overflow: hidden;
-}
-.sheet-card::after {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  border-radius: 12px 12px 0 0;
-}
-.sheet-card.blog::after     { background: var(--blue); }
-.sheet-card.glossary::after { background: var(--amber); }
-.sheet-card.micro::after    { background: var(--purple); }
-.sheet-card.reopt::after    { background: var(--teal); }
-.sheet-card.loaded          { border-color: var(--border2); }
+/* Conflict detail block */
+.conflict-block { margin-top:6px; display:flex; flex-direction:column; gap:3px; }
+.conflict-tag { display:inline-flex; align-items:center; gap:5px; font-family:var(--font-m); font-size:9px; padding:2px 7px; border-radius:4px; width:fit-content; }
+.conflict-tag.cross { background:var(--red-s);    color:var(--red);    border:1px solid var(--red-b); }
+.conflict-tag.intra { background:var(--orange-s); color:var(--orange); border:1px solid var(--orange-b); }
+.conflict-detail { font-family:var(--font-m); font-size:9px; color:var(--muted); margin-top:1px; padding-left:2px; line-height:1.5; }
+.conflict-detail em { color:var(--text); font-style:normal; }
 
-.card-label {
-  font-family: var(--font-h); font-size: 10px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.8px;
-  margin-bottom: 12px; display: flex; align-items: center; gap: 7px;
-}
-.card-label::before { content: ''; width: 6px; height: 6px; border-radius: 50%; }
-.sheet-card.blog    .card-label { color: var(--blue); }
-.sheet-card.blog    .card-label::before { background: var(--blue); }
-.sheet-card.glossary .card-label { color: var(--amber); }
-.sheet-card.glossary .card-label::before { background: var(--amber); }
-.sheet-card.micro   .card-label { color: var(--purple); }
-.sheet-card.micro   .card-label::before { background: var(--purple); }
-.sheet-card.reopt   .card-label { color: var(--teal); }
-.sheet-card.reopt   .card-label::before { background: var(--teal); }
+/* Other cells */
+.badge { display:inline-block; font-size:9px; font-family:var(--font-m); padding:2px 8px; border-radius:4px; font-weight:500; }
+.tab-ref { font-family:var(--font-m); font-size:10px; color:var(--muted); }
+.col-ref { font-family:var(--font-m); font-size:10px; color:var(--muted); }
+.ctx-ref { font-size:12px; color:var(--muted); }
+.row-ref { font-family:var(--font-m); font-size:10px; color:var(--faint); }
 
-.input-row { display: flex; gap: 8px; }
+.status-badge { display:inline-flex; align-items:center; gap:4px; font-size:9px; font-family:var(--font-m); padding:3px 8px; border-radius:4px; white-space:nowrap; }
+.status-badge.ok      { background:var(--green-s);  color:var(--green);  border:1px solid var(--green-b); }
+.status-badge.cross   { background:var(--red-s);    color:var(--red);    border:1px solid var(--red-b); }
+.status-badge.intra   { background:var(--orange-s); color:var(--orange); border:1px solid var(--orange-b); }
+.status-badge.both    { background:#200a0e;          color:#ff7755;       border:1px solid #4a1520; }
 
-.sheet-input {
-  flex: 1; min-width: 0; background: var(--s2); border: 1px solid var(--border);
-  border-radius: 7px; padding: 8px 11px; color: var(--text);
-  font-family: var(--font-m); font-size: 11px; outline: none; transition: border-color 0.2s;
-}
-.sheet-input::placeholder { color: var(--faint); }
-.sheet-input:focus        { border-color: var(--border2); }
-
-.load-btn {
-  background: var(--s3); border: 1px solid var(--border2);
-  border-radius: 7px; color: var(--text);
-  font-family: var(--font-m); font-size: 11px;
-  padding: 8px 14px; cursor: pointer; white-space: nowrap;
-  transition: background 0.15s; flex-shrink: 0;
-}
-.load-btn:hover    { background: var(--border); }
-.load-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-
-.card-meta { margin-top: 10px; font-family: var(--font-m); font-size: 10px; color: var(--muted); min-height: 15px; }
-.card-meta.ok  { color: var(--green); }
-.card-meta.err { color: var(--red); }
-
-.tab-pills { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
-.tab-pill  { font-family: var(--font-m); font-size: 9px; padding: 2px 7px; border-radius: 4px; background: var(--s3); color: var(--muted); border: 1px solid var(--border); }
-
-/* ── SCAN BAR ── */
-.scan-bar {
-  background: var(--s1); border: 1px solid var(--border);
-  border-radius: 12px; padding: 1.25rem 1.5rem;
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;
-}
-.scan-info { font-size: 13px; color: var(--muted); }
-.scan-info strong { color: var(--text); font-weight: 500; }
-
-.scan-btn {
-  background: var(--accent); color: #0c0c0e;
-  border: none; border-radius: 8px; padding: 11px 28px;
-  font-family: var(--font-h); font-size: 13px; font-weight: 700;
-  cursor: pointer; transition: all 0.15s; flex-shrink: 0; letter-spacing: 0.3px;
-}
-.scan-btn:hover    { background: var(--accent2); transform: translateY(-1px); }
-.scan-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
-
-/* ── STATS ── */
-.stats-row {
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 10px; margin-bottom: 1.5rem; display: none;
-}
-.stat-card  { background: var(--s1); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.1rem; }
-.stat-label { font-family: var(--font-m); font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 6px; }
-.stat-num   { font-family: var(--font-h); font-size: 28px; font-weight: 800; letter-spacing: -1.5px; }
-.stat-num.acc   { color: var(--accent); }
-.stat-num.red   { color: var(--red); }
-.stat-num.green { color: var(--green); }
-
-/* ── DUP ALERT ── */
-.dup-alert {
-  background: var(--red-s); border: 1px solid var(--red-b);
-  border-radius: 10px; padding: 12px 16px;
-  font-size: 12px; color: var(--red);
-  margin-bottom: 1.25rem; display: none; line-height: 1.7;
-}
-
-/* ── RESULTS ── */
-#results-area { display: none; }
-
-.results-toolbar { display: flex; gap: 10px; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
-
-.search-input {
-  flex: 1; min-width: 200px; background: var(--s1); border: 1px solid var(--border);
-  border-radius: 8px; padding: 8px 13px; color: var(--text);
-  font-family: var(--font-b); font-size: 13px; outline: none; transition: border-color 0.2s;
-}
-.search-input:focus       { border-color: var(--border2); }
-.search-input::placeholder { color: var(--faint); }
-
-.ftab {
-  padding: 7px 14px; font-size: 11px; font-family: var(--font-m);
-  border-radius: 7px; border: 1px solid var(--border); background: var(--s1);
-  color: var(--muted); cursor: pointer; transition: all 0.15s; white-space: nowrap;
-}
-.ftab:hover          { border-color: var(--border2); color: var(--text); }
-.ftab.active         { background: var(--s2); border-color: var(--border2); color: var(--text); }
-.ftab.dup-tab.active { background: var(--red-s); border-color: var(--red-b); color: var(--red); }
-
-.export-btn {
-  background: transparent; border: 1px solid var(--border2);
-  border-radius: 7px; color: var(--muted);
-  font-family: var(--font-m); font-size: 11px;
-  padding: 7px 14px; cursor: pointer; transition: all 0.15s;
-}
-.export-btn:hover { color: var(--text); background: var(--s2); }
-
-/* ── TABLE ── */
-.table-wrap { background: var(--s1); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-.tbl-scroll { max-height: 560px; overflow-y: auto; }
-.tbl-scroll::-webkit-scrollbar       { width: 4px; }
-.tbl-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
-
-table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
-
-thead th {
-  background: var(--s2); padding: 10px 14px; text-align: left;
-  font-family: var(--font-m); font-size: 9px; font-weight: 500;
-  color: var(--muted); text-transform: uppercase; letter-spacing: 0.7px;
-  border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 5;
-}
-
-tbody td { padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; color: var(--text); word-break: break-word; }
-tbody tr:last-child td            { border-bottom: none; }
-tbody tr.dup-row td               { background: #1a0d10; }
-tbody tr:not(.dup-row):hover td   { background: var(--s2); }
-
-.kw-cell     { font-family: var(--font-m); font-size: 12px; }
-.kw-cell.dup { color: var(--red); font-weight: 500; }
-
-.conflict-line { font-size: 10px; color: #ff8899; font-family: var(--font-m); margin-top: 3px; }
-
-.badge          { display: inline-block; font-size: 9px; font-family: var(--font-m); padding: 2px 8px; border-radius: 4px; font-weight: 500; }
-.badge-blog     { background: #0f1e2e; color: var(--blue);   border: 1px solid #1a3050; }
-.badge-glossary { background: #2a1e0a; color: var(--amber);  border: 1px solid #3a2a0a; }
-.badge-micro    { background: #1e0a2e; color: var(--purple); border: 1px solid #30104a; }
-.badge-reopt    { background: #0a2820; color: var(--teal);   border: 1px solid #0f3828; }
-
-.status-badge     { display: inline-flex; align-items: center; gap: 4px; font-size: 9px; font-family: var(--font-m); padding: 3px 8px; border-radius: 4px; white-space: nowrap; }
-.status-badge.ok  { background: var(--green-s); color: var(--green); border: 1px solid var(--green-b); }
-.status-badge.dup { background: var(--red-s);   color: var(--red);   border: 1px solid var(--red-b); }
-
-.tab-ref { font-family: var(--font-m); font-size: 10px; color: var(--muted); }
-.ctx-ref { font-size: 12px; color: var(--muted); }
-
-.empty-state { text-align: center; padding: 4rem 2rem; color: var(--faint); }
-.empty-big   { font-family: var(--font-h); font-size: 36px; font-weight: 800; color: var(--s3); margin-bottom: 8px; }
-
-/* ── GIS loading notice ── */
-.gis-loading {
-  font-family: var(--font-m); font-size: 11px; color: var(--faint);
-  margin-top: 10px; display: none;
-}
+.empty-state { text-align:center; padding:4rem 2rem; color:var(--faint); }
+.empty-big   { font-family:var(--font-h); font-size:36px; font-weight:800; color:var(--s3); margin-bottom:8px; }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">
-    <div class="logo-mark">D</div>
-    Duplicacy Checker
-  </div>
+  <div class="logo"><div class="logo-mark">D</div>Duplicacy Checker</div>
   <div class="header-right">
     <div class="auth-status">
       <span class="auth-dot" id="auth-dot"></span>
@@ -344,15 +212,14 @@ tbody tr:not(.dup-row):hover td   { background: var(--s2); }
 
 <main>
   <div class="hero">
-    <div class="hero-eyebrow">UltraTech Content Team</div>
-    <h1>Keyword<br/><em>Cannibalization</em><br/>Guard</h1>
-    <p>Sign in with Google, paste your 4 sheet links, and instantly detect duplicate keywords across all tabs — without touching your original sheets.</p>
+    <div class="hero-eyebrow">Content Team · Keyword Guard</div>
+    <h1>Keyword<br/><em>Cannibalization</em><br/>Checker</h1>
+    <p>Sign in, add your sheets, and instantly detect cross-sheet <em style="color:var(--red);font-style:normal">and</em> intra-sheet duplicate keywords — across every tab, without touching your originals.</p>
   </div>
 
-  <!-- AUTH GATE -->
   <div id="auth-gate">
     <h2>Sign in to get started</h2>
-    <p>Uses your Google account to securely read your sheets.<br/>No data is stored. Your sheets are never modified.</p>
+    <p>Uses your Google account to read your sheets.<br/>No data stored. Sheets are <strong>never modified</strong>.</p>
     <button class="big-sign-in" id="big-sign-in" onclick="signIn()">
       <svg class="google-icon" viewBox="0 0 24 24" fill="none">
         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -362,53 +229,19 @@ tbody tr:not(.dup-row):hover td   { background: var(--s2); }
       </svg>
       Continue with Google
     </button>
-    <div class="gis-loading" id="gis-loading">Waiting for Google to load…</div>
   </div>
 
-  <!-- MAIN APP -->
   <div id="app-content">
 
-    <div class="sheets-grid">
-      <div class="sheet-card blog" id="card-blog">
-        <div class="card-label">Blog Topic Sheet</div>
-        <div class="input-row">
-          <input class="sheet-input" id="url-blog" placeholder="Paste Google Sheets URL..."/>
-          <button class="load-btn" id="btn-blog" onclick="loadSheet('blog')">Load</button>
-        </div>
-        <div class="card-meta" id="meta-blog">Paste link and click Load</div>
-        <div class="tab-pills" id="pills-blog"></div>
-      </div>
-
-      <div class="sheet-card glossary" id="card-glossary">
-        <div class="card-label">Glossary Sheet</div>
-        <div class="input-row">
-          <input class="sheet-input" id="url-glossary" placeholder="Paste Google Sheets URL..."/>
-          <button class="load-btn" id="btn-glossary" onclick="loadSheet('glossary')">Load</button>
-        </div>
-        <div class="card-meta" id="meta-glossary">Paste link and click Load</div>
-        <div class="tab-pills" id="pills-glossary"></div>
-      </div>
-
-      <div class="sheet-card micro" id="card-micro">
-        <div class="card-label">Micro Blog Sheet</div>
-        <div class="input-row">
-          <input class="sheet-input" id="url-micro" placeholder="Paste Google Sheets URL..."/>
-          <button class="load-btn" id="btn-micro" onclick="loadSheet('micro')">Load</button>
-        </div>
-        <div class="card-meta" id="meta-micro">Paste link and click Load</div>
-        <div class="tab-pills" id="pills-micro"></div>
-      </div>
-
-      <div class="sheet-card reopt" id="card-reopt">
-        <div class="card-label">Re-optimisation Sheet</div>
-        <div class="input-row">
-          <input class="sheet-input" id="url-reopt" placeholder="Paste Google Sheets URL..."/>
-          <button class="load-btn" id="btn-reopt" onclick="loadSheet('reopt')">Load</button>
-        </div>
-        <div class="card-meta" id="meta-reopt">Paste link and click Load</div>
-        <div class="tab-pills" id="pills-reopt"></div>
-      </div>
+    <div class="section-header">
+      <div class="section-title">Your Sheets</div>
+      <button class="add-sheet-btn" onclick="addSheetCard()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        Add Another Sheet
+      </button>
     </div>
+
+    <div class="sheets-grid" id="sheets-grid"></div>
 
     <div class="scan-bar">
       <div class="scan-info" id="scan-info">Load at least one sheet to begin scanning.</div>
@@ -416,24 +249,30 @@ tbody tr:not(.dup-row):hover td   { background: var(--s2); }
     </div>
 
     <div class="stats-row" id="stats-row">
-      <div class="stat-card"><div class="stat-label">Total Keywords</div><div class="stat-num acc" id="st-total">0</div></div>
-      <div class="stat-card"><div class="stat-label">Unique</div><div class="stat-num green" id="st-unique">0</div></div>
-      <div class="stat-card"><div class="stat-label">Duplicates</div><div class="stat-num red" id="st-dup">0</div></div>
-      <div class="stat-card"><div class="stat-label">Sheets Loaded</div><div class="stat-num" id="st-sheets">0</div></div>
-      <div class="stat-card"><div class="stat-label">Tabs Scanned</div><div class="stat-num" id="st-tabs">0</div></div>
+      <div class="stat-card"><div class="stat-label">Total Keywords</div><div class="stat-num acc"    id="st-total">0</div></div>
+      <div class="stat-card"><div class="stat-label">Unique</div>        <div class="stat-num green"  id="st-unique">0</div></div>
+      <div class="stat-card"><div class="stat-label">Cross-Sheet Dups</div><div class="stat-num red"  id="st-cross">0</div></div>
+      <div class="stat-card"><div class="stat-label">Intra-Sheet Dups</div><div class="stat-num orange" id="st-intra">0</div></div>
+      <div class="stat-card"><div class="stat-label">Sheets Loaded</div><div class="stat-num"         id="st-sheets">0</div></div>
+      <div class="stat-card"><div class="stat-label">Tabs Scanned</div> <div class="stat-num"         id="st-tabs">0</div></div>
     </div>
 
     <div class="dup-alert" id="dup-alert"></div>
 
     <div id="results-area">
+      <div class="dup-legend" id="dup-legend" style="display:none">
+        <span class="legend-pill cross">● Cross-Sheet Duplicate — same keyword in 2+ different sheets</span>
+        <span class="legend-pill intra">● Intra-Sheet Duplicate — same keyword in 2+ tabs within one sheet</span>
+        <span class="legend-pill unique">● Unique — not found anywhere else</span>
+      </div>
+
       <div class="results-toolbar">
-        <input class="search-input" id="search-box" placeholder="Search keywords, sheets, tabs..." oninput="renderTable()"/>
-        <button class="ftab active" onclick="setFilter('all',this)">All</button>
-        <button class="ftab" onclick="setFilter('Blog Topic Sheet',this)">Blog</button>
-        <button class="ftab" onclick="setFilter('Glossary Sheet',this)">Glossary</button>
-        <button class="ftab" onclick="setFilter('Micro Blog Sheet',this)">Micro Blog</button>
-        <button class="ftab" onclick="setFilter('Re-optimisation Sheet',this)">Re-opt</button>
-        <button class="ftab dup-tab" onclick="setFilter('DUPES',this)">⚑ Dupes Only</button>
+        <input class="search-input" id="search-box" placeholder="Search keywords, sheets, tabs, columns…" oninput="renderTable()"/>
+        <div class="filter-tabs-dynamic" id="filter-tabs">
+          <button class="ftab active" onclick="setFilter('all',this)">All</button>
+          <button class="ftab cross-tab" onclick="setFilter('CROSS',this)">🔴 Cross-Sheet</button>
+          <button class="ftab intra-tab" onclick="setFilter('INTRA',this)">🟠 Intra-Sheet</button>
+        </div>
         <button class="export-btn" onclick="exportCSV()">↓ Export CSV</button>
       </div>
 
@@ -442,12 +281,13 @@ tbody tr:not(.dup-row):hover td   { background: var(--s2); }
           <table>
             <thead>
               <tr>
-                <th style="width:26%">Keyword</th>
-                <th style="width:14%">Sheet</th>
-                <th style="width:14%">Tab</th>
-                <th style="width:14%">Column</th>
-                <th style="width:22%">Context / Topic</th>
-                <th style="width:10%">Status</th>
+                <th style="width:22%">Keyword</th>
+                <th style="width:13%">Sheet</th>
+                <th style="width:12%">Tab</th>
+                <th style="width:13%">Column</th>
+                <th style="width:6%">Row</th>
+                <th style="width:20%">Context / Topic</th>
+                <th style="width:14%">Status</th>
               </tr>
             </thead>
             <tbody id="kw-body"></tbody>
@@ -460,120 +300,102 @@ tbody tr:not(.dup-row):hover td   { background: var(--s2); }
       </div>
     </div>
 
-  </div><!-- /app-content -->
+  </div>
 </main>
 
-<!-- Google Identity Services -->
 <script>
-  // Buttons start disabled. Unlock as soon as google.accounts.oauth2 is available.
-  function gisReady() {
-    document.getElementById('sign-in-btn').disabled   = false;
-    document.getElementById('big-sign-in').disabled   = false;
-    document.getElementById('auth-label').textContent = 'Not signed in';
-    document.getElementById('gis-loading').style.display = 'none';
-  }
-  // Poll as a safety net in case the onload attr fires before DOM is parsed
-  // or the ?onload= query param is stripped by the CDN
+  // GIS ready — unlock buttons via poll (most reliable cross-browser method)
   var _gisPoll = setInterval(function() {
     if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
       clearInterval(_gisPoll);
-      gisReady();
+      document.getElementById('auth-label').textContent = 'Not signed in';
     }
   }, 150);
 </script>
-<!-- No async/defer: load synchronously so onload fires reliably -->
-<script src="https://accounts.google.com/gsi/client" onload="clearInterval(_gisPoll);gisReady();" onerror="document.getElementById('auth-label').textContent='Google failed to load';"></script>
+<script src="https://accounts.google.com/gsi/client" onerror="document.getElementById('auth-label').textContent='Google failed to load';"></script>
 
 <script>
-// ── CONFIG ───────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// CONFIG
+// ─────────────────────────────────────────────────────────────────────────────
 const CLIENT_ID = '119946899232-sheciap87rvesrjm9ivv6ea51p0uut4p.apps.googleusercontent.com';
 const SCOPES    = 'https://www.googleapis.com/auth/spreadsheets.readonly';
 const API_BASE  = 'https://sheets.googleapis.com/v4/spreadsheets';
 
-// ── Keyword column patterns — broad to catch non-standard headers ─────────────
-const KW_PATTERNS = {
-  'Blog Topic Sheet'      : ['primary keyword', 'focused keyword', 'secondary keyword', 'focus keyword', 'blog topic', 'primary', 'keyword'],
-  'Glossary Sheet'        : ['keyword', 'term', 'terminology', 'glossary term', 'word'],
-  'Micro Blog Sheet'      : ['keyword', 'focus keyword', 'primary keyword', 'focused keyword', 'blog topic', 'topic'],
-  'Re-optimisation Sheet' : ['keyword', 'semantic keyword', 'focus keyword', 'primary keyword', 'target keyword', 'kw'],
-};
+// ── KEYWORD COLUMN DETECTION (matches Apps Script logic exactly) ──────────────
+// Rule: a column header counts as a keyword column if it contains the word
+// "keyword" OR one of these known multi-word patterns.
+// This is the same pattern list used in the Apps Script KW_PATTERNS.
+const KW_HEADER_PATTERNS = [
+  'primary keyword', 'focused keyword', 'secondary keyword',
+  'focus keyword', 'target keyword', 'semantic keyword',
+  'keyword'   // catches "Keywords", "Primary/Focused Keywords" etc.
+];
 
-const CONTEXT_PATTERNS = {
-  'Blog Topic Sheet'      : ['blog topic'],
-  'Glossary Sheet'        : ['terminology', 'term'],
-  'Micro Blog Sheet'      : ['blog topic', 'topic'],
-  'Re-optimisation Sheet' : ['page url', 'url'],
-};
+// A header matches if it contains any of the above as a substring (case-insensitive)
+function isKeywordColumn(header) {
+  const h = header.toLowerCase().trim();
+  return KW_HEADER_PATTERNS.some(p => h.includes(p));
+}
 
-// ── Tabs to SKIP — only genuine admin/index tabs, NOT content tabs ────────────
-// "glossary" intentionally omitted — Micro Blog files often use a "Glossary" tab
-// for content.  Keep this list tight.
+// Context column — for grabbing the Topic/URL display value
+const CTX_PATTERNS = ['blog topic', 'page url', 'url', 'topic', 'terminology', 'term'];
+
+// Tabs ALWAYS skipped
 const SKIP_TABS = [
-  'config', 'setup', 'log', 'scan log', 'duplicate report', 'instructions',
-  'overview', 'readme', 'dashboard', 'summary',
-  'shutterstock creds',
-  'alphabet wise index', 'month wise index', 'glossary master tracker',
+  'config','setup','log','scan log','duplicate report','instructions',
+  'overview','readme','dashboard','summary','shutterstock creds',
+  'alphabet wise index','month wise index','glossary master tracker',
 ];
 
-// ── Tab names that always contain content — never skip ───────────────────────
+// These tab names are NEVER skipped even if they match a skip word
 const FORCE_INCLUDE = [
-  'microblog', 'micro blog', 'reopt', 're-opt', 're opt', 'reoptimis',
-  'cvp edit', 'hyperlocal', 'webstory', 'web story',
+  'microblog','micro blog','reopt','re-opt','re opt','reoptimis',
+  'cvp edit','hyperlocal','webstory','web story',
 ];
 
-const SHEET_META = {
-  blog     : { label: 'Blog Topic Sheet',      badge: 'badge-blog' },
-  glossary : { label: 'Glossary Sheet',        badge: 'badge-glossary' },
-  micro    : { label: 'Micro Blog Sheet',      badge: 'badge-micro' },
-  reopt    : { label: 'Re-optimisation Sheet', badge: 'badge-reopt' },
-};
+const CARD_COLORS = ['#57b8ff','#ffcc57','#b857ff','#57ffee','#57ffb8','#ff5566','#ff9957','#ff57c8','#57d4ff','#c8ff57'];
 
-// ── STATE ─────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────────────────────
 let accessToken  = null;
 let tokenClient  = null;
-let loadedSheets = {};
+let loadedSheets = {};   // cardId → { label, sheetId, keywords[], tabCount, color }
 let allKeywords  = [];
 let activeFilter = 'all';
+let cardCounter  = 0;
 
-// ── AUTH ──────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// AUTH
+// ─────────────────────────────────────────────────────────────────────────────
 function signIn() {
-  // Guard: GIS library must be available
   if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) {
-    setAuthState('err', 'Google still loading — try again in a moment');
-    return;
+    setAuthState('err','Google still loading — try again in a moment'); return;
   }
   if (!tokenClient) {
     tokenClient = google.accounts.oauth2.initTokenClient({
-      client_id : CLIENT_ID,
-      scope     : SCOPES,
-      callback  : handleToken,
+      client_id: CLIENT_ID, scope: SCOPES, callback: handleToken
     });
   }
   tokenClient.requestAccessToken({ prompt: '' });
 }
 
 function handleToken(resp) {
-  if (resp.error) {
-    setAuthState('err', 'Auth failed — ' + resp.error);
-    return;
-  }
+  if (resp.error) { setAuthState('err','Auth failed — ' + resp.error); return; }
   accessToken = resp.access_token;
-  setAuthState('on', 'Signed in');
+  setAuthState('on','Signed in');
   document.getElementById('auth-gate').style.display   = 'none';
   document.getElementById('app-content').style.display = 'block';
   document.getElementById('sign-in-btn').style.display  = 'none';
   document.getElementById('sign-out-btn').style.display = 'block';
+  if (cardCounter === 0) addSheetCard();
 }
 
 function signOut() {
-  if (accessToken) {
-    google.accounts.oauth2.revoke(accessToken, () => {});
-    accessToken = null;
-  }
-  tokenClient  = null;
-  loadedSheets = {};
-  allKeywords  = [];
-  setAuthState('', 'Not signed in');
+  if (accessToken) { google.accounts.oauth2.revoke(accessToken, ()=>{}); accessToken = null; }
+  tokenClient = null; loadedSheets = {}; allKeywords = []; cardCounter = 0;
+  setAuthState('','Not signed in');
   document.getElementById('auth-gate').style.display    = 'block';
   document.getElementById('app-content').style.display  = 'none';
   document.getElementById('sign-in-btn').style.display   = 'block';
@@ -581,13 +403,8 @@ function signOut() {
   document.getElementById('results-area').style.display  = 'none';
   document.getElementById('stats-row').style.display     = 'none';
   document.getElementById('dup-alert').style.display     = 'none';
-  // Clear all card state
-  ['blog','glossary','micro','reopt'].forEach(t => {
-    document.getElementById('meta-' + t).textContent = 'Paste link and click Load';
-    document.getElementById('meta-' + t).className   = 'card-meta';
-    document.getElementById('pills-' + t).innerHTML  = '';
-    document.getElementById('card-' + t).classList.remove('loaded');
-  });
+  document.getElementById('dup-legend').style.display    = 'none';
+  document.getElementById('sheets-grid').innerHTML       = '';
   updateScanBar();
 }
 
@@ -597,7 +414,44 @@ function setAuthState(state, label) {
   document.getElementById('auth-label').textContent = label;
 }
 
-// ── HELPERS ───────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// SHEET CARDS
+// ─────────────────────────────────────────────────────────────────────────────
+function addSheetCard(defaultName) {
+  const id       = 'sheet_' + (++cardCounter);
+  const colorIdx = (cardCounter - 1) % CARD_COLORS.length;
+  const grid     = document.getElementById('sheets-grid');
+  const card     = document.createElement('div');
+  card.className = 'sheet-card';
+  card.id        = 'card_' + id;
+  card.setAttribute('data-color', colorIdx);
+  card.innerHTML = `
+    <div class="card-top">
+      <input class="card-name-input" id="name_${id}" placeholder="Sheet name (e.g. Blog Topics)" value="${defaultName||''}"/>
+      <button class="remove-btn" onclick="removeCard('${id}')" title="Remove">×</button>
+    </div>
+    <div class="input-row">
+      <input class="sheet-input" id="url_${id}" placeholder="Paste Google Sheets URL…"/>
+      <button class="load-btn" id="btn_${id}" onclick="loadSheet('${id}')">Load</button>
+    </div>
+    <div class="kw-filter-row" id="kwfilter_${id}"></div>
+    <div class="card-meta" id="meta_${id}">Paste link and click Load</div>
+    <div class="tab-pills" id="pills_${id}"></div>
+  `;
+  grid.appendChild(card);
+}
+
+function removeCard(id) {
+  const card = document.getElementById('card_' + id);
+  if (card) card.remove();
+  delete loadedSheets[id];
+  updateScanBar();
+  rebuildFilterTabs();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
 function extractSheetId(url) {
   const m = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
   return m ? m[1] : null;
@@ -605,46 +459,44 @@ function extractSheetId(url) {
 
 function shouldSkip(name) {
   const l = name.toLowerCase().trim();
-  // Never skip force-include tabs
   if (FORCE_INCLUDE.some(p => l.includes(p))) return false;
-  // Skip only exact/prefix/suffix matches on known utility tab names
   return SKIP_TABS.some(s => l === s || l.startsWith(s + ' ') || l.endsWith(' ' + s));
 }
 
 function normalizeKw(s) {
-  return s.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
+  return s.toLowerCase().replace(/[^a-z0-9\s]/g,'').replace(/\s+/g,' ').trim();
 }
 
-function isSkippable(s) {
-  const blocked = [
-    'keyword','keywords','primary keyword','secondary keyword','focused keyword',
-    'focus keyword','target keyword','semantic keyword',
-    'sr no','sr.no','serial no','search volume','sv','terminology','term','topic',
-    'blog topic','month','status','comment','reference','url','title','description',
-    'yes','no','na','n/a','tbd','-','—','primary/focused keywords','column header',
-  ];
-  const n = s.toLowerCase().trim();
-  return s.length < 2 || blocked.includes(n) || /^\d+$/.test(n);
-}
-
-function findColIndexes(headers, patterns) {
+// Matches Apps Script findColIndexes: substring match on lowercased header
+function findKwColIndexes(headers, enabledColNames) {
+  // If user has selected specific columns via toggles, use those
+  if (enabledColNames && enabledColNames.size > 0) {
+    return headers.reduce((acc, h, i) => {
+      if (enabledColNames.has(h)) acc.push(i);
+      return acc;
+    }, []);
+  }
+  // Otherwise: use isKeywordColumn (same as Apps Script KW_PATTERNS logic)
   return headers.reduce((acc, h, i) => {
-    const hl = h.toLowerCase().trim();
-    if (patterns.some(p => hl.includes(p.toLowerCase()))) acc.push(i);
+    if (isKeywordColumn(h)) acc.push(i);
     return acc;
   }, []);
 }
 
-function findFirstColIndex(headers, patterns) {
-  return headers.findIndex(h =>
-    patterns.some(p => h.toLowerCase().trim().includes(p.toLowerCase()))
-  );
+function findCtxColIndex(headers) {
+  return headers.findIndex(h => CTX_PATTERNS.some(p => h.toLowerCase().trim().includes(p)));
 }
 
-
+function isJunkValue(s) {
+  if (!s || s.length < 2) return true;
+  if (/^\d+(\.\d+)?$/.test(s)) return true;              // pure number
+  if (/^(yes|no|na|n\/a|tbd|-)$/i.test(s)) return true;  // boolean junk
+  if (/^sr\.?\s*no\.?$/i.test(s)) return true;            // row counters
+  return false;
+}
 
 async function apiGet(url) {
-  const res = await fetch(url, { headers: { Authorization: 'Bearer ' + accessToken } });
+  const res = await fetch(url, { headers: { Authorization: 'Bearer ' + accessToken }});
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err?.error?.message || 'API error ' + res.status);
@@ -653,267 +505,381 @@ async function apiGet(url) {
 }
 
 function esc(s) {
-  return String(s || '')
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function shortSheet(s) {
-  return { 'Blog Topic Sheet':'Blog', 'Glossary Sheet':'Glossary',
-           'Micro Blog Sheet':'Micro Blog', 'Re-optimisation Sheet':'Re-opt' }[s] || s;
-}
+// ─────────────────────────────────────────────────────────────────────────────
+// LOAD SHEET
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadSheet(id) {
+  const urlEl  = document.getElementById('url_'      + id);
+  const nameEl = document.getElementById('name_'     + id);
+  const meta   = document.getElementById('meta_'     + id);
+  const btn    = document.getElementById('btn_'      + id);
+  const pills  = document.getElementById('pills_'    + id);
+  const kwFilt = document.getElementById('kwfilter_' + id);
 
-// ── LOAD SHEET ────────────────────────────────────────────────────────────────
-async function loadSheet(type) {
-  const urlVal = document.getElementById('url-' + type).value.trim();
-  const meta   = document.getElementById('meta-' + type);
-  const btn    = document.getElementById('btn-' + type);
-  const pills  = document.getElementById('pills-' + type);
-
-  if (!accessToken) { meta.textContent = 'Please sign in first.'; meta.className = 'card-meta err'; return; }
-  if (!urlVal)      { meta.textContent = 'Paste a URL first.';    meta.className = 'card-meta err'; return; }
-
+  if (!accessToken) { meta.textContent='Please sign in first.'; meta.className='card-meta err'; return; }
+  const urlVal = urlEl.value.trim();
+  if (!urlVal)  { meta.textContent='Paste a URL first.'; meta.className='card-meta err'; return; }
   const sheetId = extractSheetId(urlVal);
-  if (!sheetId) { meta.textContent = 'Invalid Google Sheets URL.'; meta.className = 'card-meta err'; return; }
+  if (!sheetId) { meta.textContent='Invalid Google Sheets URL.'; meta.className='card-meta err'; return; }
 
-  meta.textContent = 'Reading sheet metadata…'; meta.className = 'card-meta';
-  btn.disabled = true;
-  pills.innerHTML = '';
+  const label = nameEl.value.trim() || 'Sheet ' + id;
+  meta.textContent='Reading sheet…'; meta.className='card-meta';
+  btn.disabled=true; pills.innerHTML=''; kwFilt.innerHTML='';
 
   try {
-    // 1. Get all tab names
-    const spreadsheet = await apiGet(`${API_BASE}/${sheetId}?fields=sheets.properties`);
-    const allTabs = spreadsheet.sheets
-      .map(s => s.properties.title)
-      .filter(t => !shouldSkip(t));
+    // 1. Fetch tab list
+    const ss      = await apiGet(`${API_BASE}/${sheetId}?fields=sheets.properties`);
+    const allTabs = ss.sheets.map(s => s.properties.title).filter(t => !shouldSkip(t));
+    if (allTabs.length === 0) throw new Error('No readable tabs found.');
 
-    if (allTabs.length === 0) throw new Error('No readable tabs found — check sharing or tab names.');
+    meta.textContent = `Found ${allTabs.length} tab${allTabs.length!==1?'s':''} — scanning headers…`;
 
-    meta.textContent = `Found ${allTabs.length} tab${allTabs.length !== 1 ? 's' : ''} — reading keywords…`;
+    // 2. Discover keyword columns from first few tabs (for toggle UI)
+    const discoveredCols = new Set();
+    for (let ti = 0; ti < Math.min(allTabs.length, 8); ti++) {
+      try {
+        const safe = "'" + allTabs[ti].replace(/'/g,"''") + "'";
+        const rd   = await apiGet(`${API_BASE}/${sheetId}/values/${encodeURIComponent(safe)}?valueRenderOption=FORMATTED_VALUE&majorDimension=ROWS`);
+        const rows = rd.values || [];
+        if (rows.length < 1) continue;
+        rows[0].map(h => String(h||'').trim()).forEach(h => {
+          if (isKeywordColumn(h)) discoveredCols.add(h);
+        });
+      } catch(e) {}
+    }
 
+    // Build toggle UI — all ON by default
+    const enabledCols = new Set(discoveredCols);
+    if (discoveredCols.size > 0) {
+      const lbl = document.createElement('span');
+      lbl.className='kw-tag-label'; lbl.textContent='Scan:';
+      kwFilt.appendChild(lbl);
+      discoveredCols.forEach(colName => {
+        const tag = document.createElement('span');
+        tag.className = 'kw-tag';
+        tag.textContent = colName;
+        tag.onclick = () => {
+          if (enabledCols.has(colName)) { enabledCols.delete(colName); tag.classList.add('off'); }
+          else                          { enabledCols.add(colName);    tag.classList.remove('off'); }
+        };
+        kwFilt.appendChild(tag);
+      });
+    }
+
+    // Show tab pills
     allTabs.forEach(t => {
       const pill = document.createElement('span');
-      pill.className = 'tab-pill'; pill.textContent = t;
-      pills.appendChild(pill);
+      pill.className='tab-pill'; pill.textContent=t; pills.appendChild(pill);
     });
 
-    // 2. Read keyword columns from every tab
-    const sheetLabel = SHEET_META[type].label;
-    const kwPats     = KW_PATTERNS[sheetLabel]  || ['keyword'];
-    const ctxPats    = CONTEXT_PATTERNS[sheetLabel] || [];
-    const keywords   = [];
-
+    // 3. Read every tab and collect keywords
+    const keywords = [];
     for (let ti = 0; ti < allTabs.length; ti++) {
       const tabName = allTabs[ti];
-      meta.textContent = `Reading tab ${ti + 1}/${allTabs.length}: ${tabName}`;
-
+      meta.textContent = `Reading ${ti+1}/${allTabs.length}: ${tabName}`;
       try {
-        const safeTab   = "'" + tabName.replace(/'/g, "''") + "'";
-        const encoded   = encodeURIComponent(safeTab);
-        const rangeData = await apiGet(`${API_BASE}/${sheetId}/values/${encoded}?valueRenderOption=FORMATTED_VALUE`);
-        const rows      = rangeData.values || [];
+        const safe = "'" + tabName.replace(/'/g,"''") + "'";
+        const rd   = await apiGet(`${API_BASE}/${sheetId}/values/${encodeURIComponent(safe)}?valueRenderOption=FORMATTED_VALUE`);
+        const rows = rd.values || [];
         if (rows.length < 2) continue;
 
-        const headers = rows[0].map(h => String(h || '').trim());
+        const headers = rows[0].map(h => String(h||'').trim());
 
-        // Step 1: Try to match keyword columns by header name
-        let kwIdxs = findColIndexes(headers, kwPats);
+        // ── COLUMN DETECTION (mirrors Apps Script findColIndexes) ──
+        // Priority 1: user-selected columns via toggle
+        // Priority 2: isKeywordColumn() — header contains "keyword" pattern
+        // Priority 3: content-score fallback (for sheets with no keyword header)
+        let kwIdxs = findKwColIndexes(headers, enabledCols.size > 0 ? enabledCols : null);
 
-        // Step 2: If no header match, find the best column by scoring content
-        // Score every column: count cells that look like real keyword text
         if (kwIdxs.length === 0) {
+          // Fallback: score every column, pick best candidate
           const maxCols = Math.min(headers.length, 15);
           const scores  = [];
           for (let ci = 0; ci < maxCols; ci++) {
             let score = 0;
-            // Bonus if header itself contains keyword-ish word
             const hdr = headers[ci].toLowerCase();
-            if (['keyword','kw','term','topic','phrase','word'].some(w => hdr.includes(w))) score += 10;
-            // Score data rows
+            // Bonus for header words related to keyword/topic
+            if (['keyword','kw','term','topic','phrase','word','primary','secondary','focused'].some(w => hdr.includes(w))) score += 10;
             for (let r = 1; r < Math.min(rows.length, 30); r++) {
-              const v = String(rows[r][ci] || '').trim();
-              if (!v || /^\d+$/.test(v)) continue;
+              const v = String(rows[r][ci]||'').trim();
+              if (!v || isJunkValue(v)) continue;
               if (v.length >= 3 && v.length <= 120) score += 1;
-              // Multi-word phrases are very likely keywords
               if (/\s/.test(v) && v.split(/\s+/).length <= 8) score += 1;
             }
-            scores.push({ ci, score });
+            scores.push({ci, score});
           }
-          scores.sort((a, b) => b.score - a.score);
-          // Pick the top-scoring column if it has any score at all
-          if (scores.length > 0 && scores[0].score > 0) {
-            kwIdxs = [scores[0].ci];
-            console.log(`[${tabName}] Fallback: using col ${scores[0].ci} ("${headers[scores[0].ci]}") score=${scores[0].score}`);
-          }
+          scores.sort((a,b) => b.score - a.score);
+          if (scores.length > 0 && scores[0].score > 0) kwIdxs = [scores[0].ci];
         }
 
-        // Step 3: Last resort — if still nothing, scan ALL columns
-        if (kwIdxs.length === 0) {
-          kwIdxs = headers.map((_, i) => i);
-          console.log(`[${tabName}] Last resort: scanning all ${kwIdxs.length} columns`);
-        }
+        if (kwIdxs.length === 0) continue;
 
-        const ctxIdx = findFirstColIndex(headers, ctxPats);
+        const ctxIdx = findCtxColIndex(headers);
 
         for (let r = 1; r < rows.length; r++) {
           const row     = rows[r];
-          const context = ctxIdx >= 0 ? String(row[ctxIdx] || '').trim() : '';
-
+          const context = ctxIdx >= 0 ? String(row[ctxIdx]||'').trim() : '';
           kwIdxs.forEach(ci => {
-            const cellVal = String(row[ci] || '').trim();
+            const cellVal = String(row[ci]||'').trim();
             if (!cellVal) return;
-
+            // Split on newlines (same as Apps Script .split(/[\n\r]+/))
             cellVal.split(/[\n\r]+/).forEach(part => {
               const kw = part.trim();
-              // Only skip truly useless values: empty, pure numbers, single chars, obvious UI labels
-              if (kw.length < 2) return;
-              if (/^\d+(\.\d+)?$/.test(kw)) return; // pure number
-              if (/^(yes|no|na|n\/a|tbd|-)$/i.test(kw)) return; // boolean junk
-              if (/^(sr\.?\s*no\.?|serial\s*no\.?)$/i.test(kw)) return; // row numbers
+              if (isJunkValue(kw)) return;
               keywords.push({
-                keyword    : kw,
-                normalized : normalizeKw(kw),
-                sheetType  : sheetLabel,
+                keyword   : kw,
+                normalized: normalizeKw(kw),
+                sheetLabel: label,
+                cardId    : id,
                 tabName,
-                colHeader  : headers[ci] || `Col ${ci + 1}`,
+                colHeader : headers[ci] || `Col ${ci+1}`,
+                colIndex  : ci,
                 context,
-                row        : r + 1,
+                row       : r + 1,
               });
             });
           });
         }
-      } catch (tabErr) {
-        console.warn('Tab error:', tabName, tabErr.message);
-      }
+      } catch(tabErr) { console.warn('[tab error]', tabName, tabErr.message); }
     }
 
-    loadedSheets[type] = { sheetId, keywords, tabCount: allTabs.length };
-    meta.textContent = `✓ ${allTabs.length} tab${allTabs.length !== 1 ? 's' : ''} · ${keywords.length} keywords`;
-    meta.className   = 'card-meta ok';
-    document.getElementById('card-' + type).classList.add('loaded');
-    updateScanBar();
+    const colorIdx = parseInt(document.getElementById('card_' + id).getAttribute('data-color'));
+    loadedSheets[id] = { label, sheetId, keywords, tabCount: allTabs.length, color: CARD_COLORS[colorIdx] };
 
-  } catch (e) {
-    meta.textContent = '✗ ' + e.message;
-    meta.className   = 'card-meta err';
-    console.error(e);
-  } finally {
-    btn.disabled = false;
-  }
+    meta.textContent = `✓ ${allTabs.length} tab${allTabs.length!==1?'s':''} · ${keywords.length} keywords`;
+    meta.className   = 'card-meta ok';
+    document.getElementById('card_' + id).classList.add('loaded');
+    updateScanBar();
+    rebuildFilterTabs();
+
+  } catch(e) {
+    meta.textContent = '✗ ' + e.message; meta.className = 'card-meta err'; console.error(e);
+  } finally { btn.disabled = false; }
 }
 
-// ── SCAN ──────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// SCAN  (mirrors Apps Script detectDuplicates exactly)
+// ─────────────────────────────────────────────────────────────────────────────
 function runScan() {
   const combined = [];
   Object.values(loadedSheets).forEach(s => combined.push(...s.keywords));
 
-  // Dedupe within same sheet+tab
-  const seen = new Set();
-  const unique = [];
+  // ── 1. Cross-sheet: same norm in 2+ different sheet labels ──
+  // Build norm → { sheetLabel → [entries] }
+  const normByLabel = {};
   combined.forEach(k => {
-    const key = k.normalized + '|||' + k.sheetType + '|||' + k.tabName;
-    if (!seen.has(key)) { seen.add(key); unique.push(k); }
+    if (!normByLabel[k.normalized]) normByLabel[k.normalized] = {};
+    if (!normByLabel[k.normalized][k.sheetLabel]) normByLabel[k.normalized][k.sheetLabel] = [];
+    normByLabel[k.normalized][k.sheetLabel].push(k);
   });
 
-  // Build normalised → entries map
-  const normMap = {};
-  unique.forEach(k => {
-    if (!normMap[k.normalized]) normMap[k.normalized] = [];
-    normMap[k.normalized].push(k);
+  const crossDupNorms = {}; // norm → [sheetLabels]
+  Object.entries(normByLabel).forEach(([norm, byLabel]) => {
+    const labels = Object.keys(byLabel);
+    if (labels.length >= 2) crossDupNorms[norm] = labels;
   });
 
-  // Cross-sheet duplicate detection
-  const dupNorms = new Set();
-  Object.entries(normMap).forEach(([norm, entries]) => {
-    const types = [...new Set(entries.map(e => e.sheetType))];
-    if (types.length >= 2) dupNorms.add(norm);
+  // ── 2. Intra-sheet: same norm appears in 2+ tabs of the SAME sheet ──
+  const intraDupKeys = {}; // norm + '|||' + sheetLabel → [tabNames it appears in]
+  Object.values(loadedSheets).forEach(sheet => {
+    const normToTabs = {};
+    sheet.keywords.forEach(k => {
+      const key = k.normalized;
+      if (!normToTabs[key]) normToTabs[key] = new Set();
+      normToTabs[key].add(k.tabName);
+    });
+    Object.entries(normToTabs).forEach(([norm, tabs]) => {
+      if (tabs.size >= 2) {
+        intraDupKeys[norm + '|||' + sheet.label] = [...tabs];
+      }
+    });
   });
 
-  allKeywords = unique.map(k => {
-    const isDup = dupNorms.has(k.normalized);
-    const conflictSheets = isDup
-      ? [...new Set(normMap[k.normalized].map(e => e.sheetType))].filter(s => s !== k.sheetType)
+  // ── 3. Tag every keyword entry ──
+  allKeywords = combined.map(k => {
+    const isCross = !!crossDupNorms[k.normalized];
+    const intraKey = k.normalized + '|||' + k.sheetLabel;
+    const isIntra  = !!intraDupKeys[intraKey];
+    const isDup    = isCross || isIntra;
+
+    // Cross conflicts: other sheet labels that have this keyword
+    const crossConflicts = isCross
+      ? crossDupNorms[k.normalized]
+          .filter(l => l !== k.sheetLabel)
+          .map(l => {
+            // Find which tabs in that sheet have this keyword
+            const entries = normByLabel[k.normalized][l] || [];
+            const tabs = [...new Set(entries.map(e => e.tabName))];
+            return { sheetLabel: l, tabs };
+          })
       : [];
-    return { ...k, isDup, conflictSheets };
+
+    // Intra conflicts: other tabs within this same sheet that have this keyword
+    const intraConflicts = isIntra
+      ? intraDupKeys[intraKey]
+          .filter(t => t !== k.tabName)
+      : [];
+
+    return { ...k, isDup, isCross, isIntra, crossConflicts, intraConflicts };
   });
 
-  updateStats(dupNorms.size);
+  // Stats
+  const crossCount = Object.keys(crossDupNorms).length;
+  const intraCount = Object.keys(intraDupKeys).length;
+  const totalNorms = Object.keys(normByLabel).length;
+  const uniqueCount = totalNorms - crossCount;
+
+  updateStats(crossCount, intraCount, uniqueCount);
   renderTable();
-  updateDupAlert(dupNorms);
+  updateDupAlert(crossCount, intraCount);
   document.getElementById('results-area').style.display = 'block';
   document.getElementById('stats-row').style.display    = 'grid';
+  document.getElementById('dup-legend').style.display   = 'flex';
 }
 
-function updateStats(dupCount) {
-  const total  = allKeywords.length;
-  const unique = allKeywords.filter(k => !k.isDup).length;
-  const tabs   = Object.values(loadedSheets).reduce((s, d) => s + d.tabCount, 0);
-  document.getElementById('st-total').textContent  = total.toLocaleString();
-  document.getElementById('st-unique').textContent = unique.toLocaleString();
-  document.getElementById('st-dup').textContent    = dupCount.toLocaleString();
-  document.getElementById('st-sheets').textContent = Object.keys(loadedSheets).length;
-  document.getElementById('st-tabs').textContent   = tabs;
+function updateStats(crossCount, intraCount, uniqueCount) {
+  const total = allKeywords.length;
+  const tabs  = Object.values(loadedSheets).reduce((s,d) => s + d.tabCount, 0);
+  document.getElementById('st-total').textContent   = total.toLocaleString();
+  document.getElementById('st-unique').textContent  = uniqueCount.toLocaleString();
+  document.getElementById('st-cross').textContent   = crossCount.toLocaleString();
+  document.getElementById('st-intra').textContent   = intraCount.toLocaleString();
+  document.getElementById('st-sheets').textContent  = Object.keys(loadedSheets).length;
+  document.getElementById('st-tabs').textContent    = tabs;
 }
 
-function updateDupAlert(dupNorms) {
+function updateDupAlert(crossCount, intraCount) {
   const alertEl = document.getElementById('dup-alert');
-  if (dupNorms.size === 0) { alertEl.style.display = 'none'; return; }
-  const dupKws = [...new Set(allKeywords.filter(k => k.isDup).map(k => k.keyword))].slice(0, 12);
-  const more   = dupNorms.size - dupKws.length;
+  if (crossCount + intraCount === 0) { alertEl.style.display='none'; return; }
+  const crossKws = [...new Set(allKeywords.filter(k=>k.isCross).map(k=>k.keyword))].slice(0,8);
+  const intraKws = [...new Set(allKeywords.filter(k=>k.isIntra&&!k.isCross).map(k=>k.keyword))].slice(0,6);
   alertEl.style.display = 'block';
   alertEl.innerHTML =
-    `<strong>⚑ ${dupNorms.size} keyword${dupNorms.size > 1 ? 's' : ''} appear across multiple sheets</strong> — potential cannibalization:<br/>` +
-    `<span style="opacity:.8">${dupKws.map(k => `<em>${esc(k)}</em>`).join(', ')}${more > 0 ? ` + ${more} more` : ''}</span>`;
+    `<strong>⚑ ${crossCount} cross-sheet</strong> · <strong>${intraCount} intra-sheet</strong> duplicate keyword groups detected<br/>` +
+    (crossKws.length ? `<span style="opacity:.75">Cross: ${crossKws.map(k=>`<em>${esc(k)}</em>`).join(', ')}${crossCount>crossKws.length?' + more':''}</span><br/>` : '') +
+    (intraKws.length ? `<span style="opacity:.75">Intra: ${intraKws.map(k=>`<em>${esc(k)}</em>`).join(', ')}${intraCount>intraKws.length?' + more':''}</span>` : '');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FILTER TABS
+// ─────────────────────────────────────────────────────────────────────────────
+function rebuildFilterTabs() {
+  const container = document.getElementById('filter-tabs');
+  container.innerHTML = `
+    <button class="ftab ${activeFilter==='all'?'active':''}" onclick="setFilter('all',this)">All</button>
+    <button class="ftab cross-tab ${activeFilter==='CROSS'?'active':''}" onclick="setFilter('CROSS',this)">🔴 Cross-Sheet</button>
+    <button class="ftab intra-tab ${activeFilter==='INTRA'?'active':''}" onclick="setFilter('INTRA',this)">🟠 Intra-Sheet</button>
+  `;
+  Object.values(loadedSheets).forEach(sheet => {
+    const isActive = activeFilter === sheet.label;
+    const btn = document.createElement('button');
+    btn.className = 'ftab' + (isActive ? ' active' : '');
+    btn.textContent = sheet.label;
+    if (isActive) btn.style.cssText = `border-color:${sheet.color}55;color:${sheet.color};background:${sheet.color}11`;
+    btn.onclick = function() { setFilter(sheet.label, this); };
+    container.appendChild(btn);
+  });
 }
 
 function setFilter(f, el) {
   activeFilter = f;
-  document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.ftab').forEach(t => { t.classList.remove('active'); t.style.cssText=''; });
   el.classList.add('active');
+  const sheet = Object.values(loadedSheets).find(s => s.label === f);
+  if (sheet) el.style.cssText = `border-color:${sheet.color}55;color:${sheet.color};background:${sheet.color}11`;
   renderTable();
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// RENDER TABLE
+// ─────────────────────────────────────────────────────────────────────────────
 function renderTable() {
   const body   = document.getElementById('kw-body');
   const empty  = document.getElementById('empty-state');
   const tableW = document.getElementById('table-wrap');
-  const q      = (document.getElementById('search-box').value || '').toLowerCase();
+  const q      = (document.getElementById('search-box').value||'').toLowerCase();
 
   let rows = allKeywords;
-  if (activeFilter === 'DUPES')    rows = rows.filter(k => k.isDup);
-  else if (activeFilter !== 'all') rows = rows.filter(k => k.sheetType === activeFilter);
+  if      (activeFilter === 'CROSS') rows = rows.filter(k => k.isCross);
+  else if (activeFilter === 'INTRA') rows = rows.filter(k => k.isIntra && !k.isCross);
+  else if (activeFilter !== 'all')   rows = rows.filter(k => k.sheetLabel === activeFilter);
+
   if (q) rows = rows.filter(k =>
     k.keyword.toLowerCase().includes(q) ||
     k.tabName.toLowerCase().includes(q) ||
-    (k.context || '').toLowerCase().includes(q)
+    k.sheetLabel.toLowerCase().includes(q) ||
+    k.colHeader.toLowerCase().includes(q) ||
+    (k.context||'').toLowerCase().includes(q)
   );
 
   if (rows.length === 0) {
-    body.innerHTML = ''; empty.style.display = 'block'; tableW.style.display = 'none'; return;
+    body.innerHTML=''; empty.style.display='block'; tableW.style.display='none'; return;
   }
-  empty.style.display = 'none'; tableW.style.display = 'block';
+  empty.style.display='none'; tableW.style.display='block';
 
-  rows = [...rows].sort((a, b) => {
-    if (a.isDup !== b.isDup) return a.isDup ? -1 : 1;
+  // Sort: both > cross > intra > unique, then alpha
+  rows = [...rows].sort((a,b) => {
+    const score = k => (k.isCross && k.isIntra) ? 3 : k.isCross ? 2 : k.isIntra ? 1 : 0;
+    if (score(a) !== score(b)) return score(b) - score(a);
     return a.normalized.localeCompare(b.normalized);
   });
 
   body.innerHTML = rows.map(r => {
-    const type    = Object.entries(SHEET_META).find(([, v]) => v.label === r.sheetType)?.[0] || 'blog';
-    const badge   = SHEET_META[type]?.badge || 'badge-blog';
-    const conflict = r.conflictSheets.length
-      ? `<div class="conflict-line">↔ Also in: ${r.conflictSheets.map(esc).join(', ')}</div>` : '';
-    return `<tr class="${r.isDup ? 'dup-row' : ''}">
-      <td><span class="kw-cell ${r.isDup ? 'dup' : ''}">${esc(r.keyword)}</span>${conflict}</td>
-      <td><span class="badge ${badge}">${shortSheet(r.sheetType)}</span></td>
+    const sheetColor = loadedSheets[r.cardId]?.color || '#7a7a96';
+
+    // ── Keyword cell ──
+    const kwClass  = r.isCross && r.isIntra ? 'both' : r.isCross ? 'cross' : r.isIntra ? 'intra' : '';
+    let conflictBlock = '';
+    if (r.isCross && r.crossConflicts.length) {
+      const lines = r.crossConflicts.map(c => {
+        const tabList = c.tabs.length <= 3
+          ? c.tabs.map(t => `<em>${esc(t)}</em>`).join(', ')
+          : c.tabs.slice(0,3).map(t=>`<em>${esc(t)}</em>`).join(', ') + ` +${c.tabs.length-3} more`;
+        return `<em>${esc(c.sheetLabel)}</em> → ${tabList}`;
+      }).join('<br/>');
+      conflictBlock += `
+        <div class="conflict-tag cross">↔ Cross-sheet</div>
+        <div class="conflict-detail">${lines}</div>`;
+    }
+    if (r.isIntra && r.intraConflicts.length) {
+      const tabList = r.intraConflicts.length <= 4
+        ? r.intraConflicts.map(t=>`<em>${esc(t)}</em>`).join(', ')
+        : r.intraConflicts.slice(0,4).map(t=>`<em>${esc(t)}</em>`).join(', ') + ` +${r.intraConflicts.length-4} more`;
+      conflictBlock += `
+        <div class="conflict-tag intra">↕ Same sheet</div>
+        <div class="conflict-detail">Also in: ${tabList}</div>`;
+    }
+
+    // ── Status badge ──
+    let statusClass, statusText;
+    if      (r.isCross && r.isIntra) { statusClass='both';  statusText='⚑ Cross + Intra'; }
+    else if (r.isCross)              { statusClass='cross'; statusText='⚑ Cross-Sheet'; }
+    else if (r.isIntra)              { statusClass='intra'; statusText='⚑ Intra-Sheet'; }
+    else                             { statusClass='ok';    statusText='✓ Unique'; }
+
+    const rowClass = (r.isCross && r.isIntra) ? 'row-both' : r.isCross ? 'row-cross' : r.isIntra ? 'row-intra' : '';
+
+    return `<tr class="${rowClass}">
+      <td>
+        <span class="kw-main ${kwClass}">${esc(r.keyword)}</span>
+        ${conflictBlock ? `<div class="conflict-block">${conflictBlock}</div>` : ''}
+      </td>
+      <td><span class="badge" style="background:${sheetColor}18;color:${sheetColor};border:1px solid ${sheetColor}33">${esc(r.sheetLabel)}</span></td>
       <td><span class="tab-ref">${esc(r.tabName)}</span></td>
-      <td><span class="tab-ref">${esc(r.colHeader)}</span></td>
-      <td><span class="ctx-ref">${esc(r.context || '—')}</span></td>
-      <td><span class="status-badge ${r.isDup ? 'dup' : 'ok'}">${r.isDup ? '⚑ Duplicate' : '✓ Unique'}</span></td>
+      <td><span class="col-ref">${esc(r.colHeader)}</span></td>
+      <td><span class="row-ref">${r.row}</span></td>
+      <td><span class="ctx-ref">${esc(r.context||'—')}</span></td>
+      <td><span class="status-badge ${statusClass}">${statusText}</span></td>
     </tr>`;
   }).join('');
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// SCAN BAR
+// ─────────────────────────────────────────────────────────────────────────────
 function updateScanBar() {
   const count = Object.keys(loadedSheets).length;
   const info  = document.getElementById('scan-info');
@@ -922,27 +888,34 @@ function updateScanBar() {
     info.textContent = 'Load at least one sheet to begin scanning.';
     btn.disabled = true;
   } else {
-    const names = Object.keys(loadedSheets).map(t => SHEET_META[t].label);
-    info.innerHTML = `<strong>${count} sheet${count > 1 ? 's' : ''} loaded</strong> — ${names.join(', ')}`;
+    const names = Object.values(loadedSheets).map(s => s.label);
+    info.innerHTML = `<strong>${count} sheet${count>1?'s':''} loaded</strong> — ${names.join(', ')}`;
     btn.disabled = false;
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// EXPORT CSV
+// ─────────────────────────────────────────────────────────────────────────────
 function exportCSV() {
   if (!allKeywords.length) return;
-  const rows = [['Keyword','Sheet Type','Tab','Column','Context','Status','Conflicts With']];
+  const rows = [['Keyword','Sheet','Tab','Column','Row','Context','Status','Cross-Sheet Conflicts','Intra-Sheet Tab Conflicts']];
   allKeywords.forEach(k => {
+    const statusStr = k.isCross && k.isIntra ? 'CROSS+INTRA' : k.isCross ? 'CROSS-SHEET' : k.isIntra ? 'INTRA-SHEET' : 'Unique';
+    const crossStr  = k.crossConflicts.map(c => c.sheetLabel + ' [' + c.tabs.join(',') + ']').join('; ');
+    const intraStr  = k.intraConflicts.join('; ');
     rows.push([
       `"${k.keyword.replace(/"/g,'""')}"`,
-      `"${k.sheetType}"`, `"${k.tabName}"`, `"${k.colHeader}"`,
+      `"${k.sheetLabel}"`, `"${k.tabName}"`, `"${k.colHeader}"`,
+      k.row,
       `"${(k.context||'').replace(/"/g,'""')}"`,
-      k.isDup ? 'DUPLICATE' : 'Unique',
-      `"${k.conflictSheets.join('; ')}"`,
+      statusStr,
+      `"${crossStr}"`, `"${intraStr}"`,
     ]);
   });
-  const blob = new Blob([rows.map(r => r.join(',')).join('\n')], { type: 'text/csv' });
-  const a    = document.createElement('a');
-  a.href = URL.createObjectURL(blob); a.download = 'duplicacy_report.csv'; a.click();
+  const blob = new Blob([rows.map(r=>r.join(',')).join('\n')], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download='duplicacy_report.csv'; a.click();
 }
 </script>
 </body>
